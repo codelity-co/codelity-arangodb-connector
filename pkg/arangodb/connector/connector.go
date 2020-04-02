@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"crypto/tls"
 
 	godriver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
@@ -15,6 +16,8 @@ type ArangoDbConnector struct {
 	Connection godriver.Connection
 	Database godriver.Database
 	DatabaseName string
+	UserName string
+	UserPassword string
 }
 
 var (
@@ -25,14 +28,17 @@ func(c *ArangoDbConnector) Connect() error {
 	var err error
 
 	c.Connection, err = http.NewConnection(http.ConnectionConfig{
-    Endpoints: []string{c.ArangoDbUrls},
+		Endpoints: []string{c.ArangoDbUrls},
+		TLSConfig: &tls.Config{InsecureSkipVerify: true},
 	})
+	
 	if err != nil {
 		return err
 	}
 
 	clientConfig := godriver.ClientConfig{
 		Connection: c.Connection,
+		Authentication: godriver.BasicAuthentication(c.UserName, c.UserPassword),
 	}
 	c.Client, err = godriver.NewClient(clientConfig)
 	if err != nil {
