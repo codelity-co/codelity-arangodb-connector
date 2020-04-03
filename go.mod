@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/arangodb/go-driver v0.0.0-20200320132036-3eed5765b949
-	github.com/codelity-co/codelity-nats-connector v0.2.0 // indirect
+	github.com/golang/mock v1.4.3
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 )
