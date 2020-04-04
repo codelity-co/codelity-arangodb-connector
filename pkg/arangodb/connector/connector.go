@@ -27,9 +27,6 @@ var (
 
 func(c *ArangodbConnector) Connect() error {
 	var err error
-	if c.Connection == nil {
-		return fmt.Errorf("ArangoDB connection has not yet establlished")
-	}
 	c.Connection, err = http.NewConnection(http.ConnectionConfig{
 		Endpoints: []string{c.ArangoDbUrls},
 		TLSConfig: &tls.Config{InsecureSkipVerify: true},
