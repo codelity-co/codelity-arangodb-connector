@@ -11,8 +11,6 @@ import (
 
 type ArangodbConnector struct {
 	ArangoDbUrls string
-	CollectionName string
-	Collection godriver.Collection
 	Client godriver.Client
 	Connection godriver.Connection
 	Database godriver.Database
@@ -79,7 +77,7 @@ func(c *ArangodbConnector) OpenDatabase() error {
 	return err
 }
 
-func(c *ArangodbConnector) CollectionExists() (*bool, error) {
+func(c *ArangodbConnector) CollectionExists(collectionName string) (*bool, error) {
 	var (
 		colExist bool
 		err error
@@ -87,7 +85,7 @@ func(c *ArangodbConnector) CollectionExists() (*bool, error) {
 	if c.Database == nil {
 		return nil, fmt.Errorf("Database %v has not yet opened", c.DatabaseName)
 	}
-	colExist, err = c.Database.CollectionExists(ctx, c.CollectionName)
+	colExist, err = c.Database.CollectionExists(ctx, collectionName)
 	if err != nil {
 		return nil, err
 	}
@@ -95,23 +93,26 @@ func(c *ArangodbConnector) CollectionExists() (*bool, error) {
 
 }
 
-func(c *ArangodbConnector) OpenCollection() error {
+func(c *ArangodbConnector) OpenCollection(collectionName string) (*godriver.Collection, error) {
 	var err error
 	if c.Database == nil {
-		return fmt.Errorf("Database %v has not yet opened", c.DatabaseName)
+		return nil, fmt.Errorf("Database %v has not yet opened", c.DatabaseName)
 	}
-	c.Collection, err = c.Database.Collection(ctx, c.CollectionName)
-	return err
+	var collection godriver.Collection
+	collection, err = c.Database.Collection(ctx, collectionName)
+	return &collection, err
 }
 
-func(c *ArangodbConnector) CreateDocument(doc interface{}) (*godriver.DocumentMeta, error) {
+func(c *ArangodbConnector) CreateDocument(collection *godriver.Collection, doc interface{}) (*godriver.DocumentMeta, error) {
 	if c.Database == nil {
 		return nil, fmt.Errorf("Database %v has not yet opened", c.DatabaseName)
 	}
-	if c.Collection == nil {
-		return nil, fmt.Errorf("Collection %v has not yet opened", c.CollectionName)
+	if collection == nil {
+		return nil, fmt.Errorf("Collection has not yet opened")
 	}
-	meta, err := c.Collection.CreateDocument(ctx, doc)
+
+	meta, err := (*collection).CreateDocument(ctx, doc)
+
 	if err != nil {
 		return nil, err
 	}
@@ -119,28 +120,28 @@ func(c *ArangodbConnector) CreateDocument(doc interface{}) (*godriver.DocumentMe
 
 }
 
-func(c *ArangodbConnector) UpdateDocument(key string, doc interface{}) (*godriver.DocumentMeta, error) {
+func(c *ArangodbConnector) UpdateDocument(collection *godriver.Collection, key string, doc interface{}) (*godriver.DocumentMeta, error) {
 	if c.Database == nil {
 		return nil, fmt.Errorf("Database %v has not yet opened", c.DatabaseName)
 	}
-	if c.Collection == nil {
-		return nil, fmt.Errorf("Collection %v has not yet opened", c.CollectionName)
+	if collection == nil {
+		return nil, fmt.Errorf("Collection has not yet opened")
 	}
-	meta, err := c.Collection.UpdateDocument(ctx, key, doc)
+	meta, err := (*collection).UpdateDocument(ctx, key, doc)
 	if err != nil {
 		return nil, err
 	}
 	return &meta, nil
 }
 
-func(c *ArangodbConnector) DeleteDocument(key string) (*godriver.DocumentMeta, error) {
+func(c *ArangodbConnector) DeleteDocument(collection *godriver.Collection, key string) (*godriver.DocumentMeta, error) {
 	if c.Database == nil {
 		return nil, fmt.Errorf("Database %v has not yet opened", c.DatabaseName)
 	}
-	if c.Collection == nil {
-		return nil, fmt.Errorf("Collection %v has not yet opened", c.CollectionName)
+	if collection == nil {
+		return nil, fmt.Errorf("Collection has not yet opened")
 	}
-	meta, err := c.Collection.RemoveDocument(ctx, key)
+	meta, err := (*collection).RemoveDocument(ctx, key)
 	if err != nil {
 		return nil, err
 	}
